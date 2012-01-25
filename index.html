@@ -1,0 +1,361 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta content="yes" name="apple-mobile-web-app-capable" />
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+  <meta content="minimum-scale=1.0, width=device-width, maximum-scale=0.6667, user-scalable=no" name="viewport" />
+  <meta name="viewport" content="width=320; user-scalable=no" />
+  <link href="jquerymobile.css" type="text/css" rel="stylesheet"/>
+	<script type="text/javascript" charset="utf-8" src="phonegap.js"></script>
+	<script type="text/javascript" charset="utf-8" src="jquery.js"></script>
+  <script type="text/javascript" charset="utf-8" src="jquerymobile.js"></script>
+  <script type="text/javascript" charset="utf-8" src="application.js"></script>
+  
+  <script type="text/javascript">
+  
+    var CURRENT_LAT = '';
+    var CURRENT_LNG = '';
+    var NETWORK_STATE = '';
+
+    function init() {
+      if( window.navigator.onLine )
+      {
+        NETWORK_STATE = 1;
+      }else{
+        NETWORK_STATE = 0;
+      }
+      initGdocsNews();
+      initGdocsYields();
+      document.addEventListener("deviceready", onDeviceReady, false);
+    }
+
+    function onDeviceReady() {
+      if( window.navigator.onLine )
+      {
+        var userLINK = [];
+        userLINK.push('uuid='+device.uuid);
+        userLINK.push('platform='+device.platform);
+        userLINK.push('version='+device.version);
+        userLINK.push('dname='+device.name);
+        userLINK.push('scrsize='+String(screen.width) + 'x' + String(screen.height));
+        xmlhttp=new XMLHttpRequest();
+        xmlhttp.open("POST","http://hfpintranet.heroku.com/logUSER",false);
+        xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+        xmlhttp.send(userLINK.join("&"));
+        var respText = xmlhttp.responseText;
+      };
+    }
+
+    function alertDismissed() {
+        // Empty
+    }
+
+    var gpsLocation = function() {
+        var suc = function(p) {
+            alert(p.coords.latitude + " " + p.coords.longitude);
+          CURRENT_LAT = p.coords.latitude;
+          CURRENT_LNG = p.coords.longitude;
+          alert( 'Got them' );
+        };
+        var locFail = function() {
+        };
+        navigator.geolocation.getCurrentPosition(suc, locFail);
+    };
+
+  	function localLocation()
+  	{
+  		navigator.geolocation.getCurrentPosition(foundLocation, noLocation,{maximumAge:300,timeout:3000});
+  	}
+  	
+  	function foundLocation(position)
+  	{
+  		var lat = position.coords.latitude;
+  		var long = position.coords.longitude;
+      var inZip = getGeoZip(lat,long);
+      if( inZip.length == 5)
+      {
+        window.localStorage.setItem('wthrzip',inZip);
+        initWthr();
+      }
+    }
+    
+  	function noLocation(error_msg)
+  	{
+      // empty
+   	}
+  	
+    function dispForm() {
+      $.mobile.changePage("#myForm", "slide");
+    }
+    
+    function dispContactus()
+    {
+      $.mobile.changePage("#contactUs", "slide");
+    }
+    
+    function showGrain()
+    {
+      $.mobile.showPageLoadingMsg ();
+      initGrainDisplay();
+      $.mobile.hidePageLoadingMsg ();
+      $.mobile.changePage("#grainDisplay", "slide");
+    }
+    
+    function showLivestock()
+    {
+      $.mobile.showPageLoadingMsg ();
+      initLivestockDisplay();
+      $.mobile.hidePageLoadingMsg ();
+      $.mobile.changePage("#livestockDisplay", "slide");
+    }
+    
+    function dispNews()
+    {
+      $.mobile.changePage("#news", "slide");
+    }
+
+    function dispYields()
+    {
+      $.mobile.changePage("#yields", "slide");
+    }
+
+    function dispWeather()
+    {
+      $.mobile.showPageLoadingMsg ();
+      initWthr();
+      $.mobile.hidePageLoadingMsg ();
+      $.mobile.changePage("#weather", "slide");
+    }
+    
+  </script>
+</head>
+<body onload="init();">
+<div data-role="page" id="home" data-inset="false" data-theme="b" style="height: 100%;">
+
+	<div data-role="header" data-position="fixed">
+    <h1>MAC Mobile</h1>
+    <a href="#about" class="ui-btn-right">About</a>
+	</div><!-- /header -->
+
+	<div data-role="content">
+		<p id="home" style="text-align: center; font-weight: bold;">Welcome to Mobile Ag Connect's<br />Mobile Information System</p>
+		<p><br /></p>
+    <div class="ui-grid-b">
+    	<div class="ui-block-a" align="center"><img src="images/quote.png" border="0" width="60" height="60" onClick="javascript:showGrain();" /></div>
+    	<div class="ui-block-b" align="center"><img src="images/quote.png" border="0" width="60" height="60" onClick="javascript:showLivestock();" /></div>
+    	<div class="ui-block-c" align="center"><img src="images/news.png" border="0" width="60" height="60" onClick="javascript:dispNews();" /></div>
+      <div class="ui-block-a" align="center" style="font-size:10pt; font-weight: bold;">Grain<br />Quotes</div>
+      <div class="ui-block-b" align="center" style="font-size:10pt; font-weight: bold;">Livestock<br />Quotes</div>
+      <div class="ui-block-c" align="center" style="font-size:10pt; font-weight: bold;">News</div>
+    </div>
+    <div class="ui-grid-b">
+      <div class="ui-block-a">&nbsp;</div>
+      <div class="ui-block-b">&nbsp;</div>
+      <div class="ui-block-c">&nbsp;</div>
+      <div class="ui-block-a" align="center"><img src="images/news.png" border="0" width="60" height="60" onClick="javascript:dispYields();" /></div>
+    	<div class="ui-block-b" align="center"><img src="images/wthr.png" border="0" width="60" height="60" onClick="javascript:dispWeather();" /></div>
+    	<div class="ui-block-c" align="center"><img src="images/contactus.png" border="0" width="60" height="60" onClick="javascript:dispContactus();" /></div>
+      <div class="ui-block-a" align="center" style="font-size:10pt; font-weight: bold;">Yields</div>
+      <div class="ui-block-b" align="center" style="font-size:10pt; font-weight: bold;">Weather</div>
+      <div class="ui-block-c" align="center" style="font-size:10pt; font-weight: bold;">Contact Us</div>
+    </div>
+  </div>
+	<div data-role="footer" data-position="fixed">
+		<h5 style="font-size: 8pt;">By: AppsMade4U.com</h5>
+	</div><!-- /footer -->
+</div><!-- /page -->
+<div data-role="page" id="about" data-inset="true" data-theme="b" style="height: 100%;">
+	<div data-role="header" data-position="fixed">
+    <a href="#home" data-role="button" data-icon="home" data-back="true">Home</a>
+		<h1>About</h1>
+	</div><!-- /header -->
+	<div data-role="content">
+    <p>Mobile Ag Connect was designed as a tool for farmers, and a way for providers to get their information to their client's.</p>
+    <p>For more information, go to http://www.mobileagconnect.com</p>
+  </div>
+	<div data-role="footer" data-position="fixed">
+		<h5 style="font-size: 8pt;">By: AppsMade4U.com</h5>
+	</div><!-- /footer -->
+</div><!-- /page -->
+
+<div data-role="page" id="grainDisplay" data-inset="true" data-theme="b">
+	<div data-role="header" data-position="fixed">
+    <a href="#home" data-role="button" data-icon="home" data-back="true">Home</a>
+		<h1>Grain</h1>
+    <a href="#grainSettings" data-icon="gear" class="ui-btn-right" data-iconpos="right">Settings</a>
+	</div><!-- /header -->
+	<div data-role="content">
+    <p id="grainError" align="center" style="color: red;"></p>
+    <p align="center" id="grain_timeof"></p>
+    <div class="ui-grid-c" id="grainText" style="font-size: 10pt;"></div>
+    <div><br /></div>
+    <div id="gRefresh"><input id="grainRefresh" type="button" value="Refresh" onClick="initGrainDisplay();" /></div>
+  </div>
+	<div data-role="footer" data-position="fixed">
+		<h5 style="font-size: 8pt;">By: AppsMade4U.com</h5>
+	</div><!-- /footer -->
+</div><!-- /page -->
+
+<div data-role="page" id="livestockDisplay" data-inset="true" data-theme="b">
+	<div data-role="header" data-position="fixed">
+    <a href="#home" data-role="button" data-icon="home" data-back="true">Home</a>
+		<h1>Livestock</h1>
+<!--
+    <a href="" data-icon="gear" class="ui-btn-right" data-iconpos="right">Settings</a>
+-->
+	</div><!-- /header -->
+	<div data-role="content">
+    <p id="livestockError" align="center" style="color: red;"></p>
+    <p align="center" id="livestock_timeof"></p>
+    <div class="ui-grid-c" id="livestockText" style="font-size: 10pt;"></div>
+    <div><br /></div>
+    <div id="lRefresh"><input id="livestockRefresh" type="button" value="Refresh" onClick="initLivestockDisplay();" /></div>
+  </div>
+	<div data-role="footer" data-position="fixed">
+		<h5 style="font-size: 8pt;">By: AppsMade4U.com</h5>
+	</div><!-- /footer -->
+</div><!-- /page -->
+
+<div data-role="page" id="news" data-inset="true" data-theme="b" style="height: 100%;">
+
+	<div data-role="header" data-position="fixed">
+    <a href="#home" data-role="button" data-icon="home" data-back="true">Home</a>
+		<h1>News</h1>
+	</div><!-- /header -->
+	<div data-role="content">
+	  <p id="newsError" align="center" style="color: red;"></p>
+    <div align="center" id="newsResp"></div>
+  </div>
+	<div data-role="footer" data-position="fixed">
+		<h5 style="font-size: 8pt;">By: AppsMade4U.com</h5>
+	</div><!-- /footer -->
+</div><!-- /page -->
+
+<div data-role="page" id="yields" data-inset="true" data-theme="b" style="height: 100%;">
+
+	<div data-role="header" data-position="fixed">
+    <a href="#home" data-role="button" data-icon="home" data-back="true">Home</a>
+		<h1>Yields</h1>
+	</div><!-- /header -->
+	<div data-role="content">	
+	  <p id="yieldsError" align="center" style="color: red;"></p>
+    <div align="center" id="yieldsResp"></div>
+  </div>
+	<div data-role="footer" data-position="fixed">
+		<h5 style="font-size: 8pt;">By: AppsMade4U.com</h5>
+	</div><!-- /footer -->
+</div><!-- /page -->
+
+
+<div data-role="page" id="weather" data-inset="true" data-theme="b">
+	<div data-role="header" data-position="fixed">
+    <a href="#home" data-role="button" data-icon="home" data-back="true">Home</a>
+		<h1>Weather</h1>
+	</div><!-- /header -->
+
+	<div data-role="content">	
+    <div data-role="fieldcontain" id="wthrSrch">
+        <input type="search" name="inZip" id="inZip" value="New Zip" onFocus="this.value='';" onBlur="this.value='New Zip';" onChange="javascript:newZip();" data-theme="b" />
+    </div>
+    <div id="gpsShow"><input id="myLocation" type="button" onClick="javascript:localLocation();" value="My Location" /><br /></div>
+    <p id="wthrError" align="center" style="color: red;"></p>
+    <div align="center" style="font-weight: bold;">
+      <span align="right" id="city"></span>
+      <span>&nbsp;&nbsp;&nbsp;</span>
+      <span align="left" id="zip"></span>
+    </div>
+    <div align="center">
+      <span><h4 id="today_is"></h4></span>
+      <span><img src="" border="0" id="curr_icon" /></span>
+      <span><h4 id="condition"></h4></span>
+    </div>
+
+    <div class="ui-grid-b">
+      <div class="ui-block-a" align="right">Temp :</div>
+      <div class="ui-block-b" style="width: 25px;">&nbsp;</div>
+      <div class="ui-block-c"  id="temp_f"></div>
+      <div class="ui-block-a" align="right">Wind :</div>
+      <div class="ui-block-b" style="width: 25px;">&nbsp;</div>
+      <div class="ui-block-c"  id="wind_cond"></div>
+      <div class="ui-block-a" align="right">Humidity&nbsp;:</div>
+      <div class="ui-block-b" style="width: 25px;">&nbsp;</div>
+      <div class="ui-block-c" align="left" id="humidity"></div>
+      <div class="ui-block-a" align="right">High&nbsp;:</div>
+      <div class="ui-block-b" style="width: 25px;">&nbsp;</div>
+      <div class="ui-block-c" align="left" id="today_high"></div>
+      <div class="ui-block-a" align="right">Low&nbsp;:</div>
+      <div class="ui-block-b" style="width: 25px;">&nbsp;</div>
+      <div class="ui-block-c" align="left" id="today_low"></div>
+      <div class="ui-block-a" align="right">Forecast&nbsp;:</div>
+      <div class="ui-block-b" style="width: 25px;">&nbsp;</div>
+      <div class="ui-block-c" align="left" id="today_cond"></div>
+    </div>
+    <div><br /></div>
+    <div align="center">
+    <h4>3-Day Forecast</h4>
+    </div>
+    <div class="ui-grid-b">
+    	<div class="ui-block-a" align="center" id="tomorrow_name"></div>
+    	<div class="ui-block-b" align="center" id="next_name"></div>
+    	<div class="ui-block-c" align="center" id="after_name"></div>
+    </div>
+    <div class="ui-grid-b">
+    	<div class="ui-block-a" align="center"><img id="tomorrow_icon" src="" border="0" /></div>
+    	<div class="ui-block-b" align="center"><img id="next_icon" src="" border="0" /></div>
+    	<div class="ui-block-c" align="center"><img id="after_icon" src="" border="0" /></div>
+    </div>
+    <div class="ui-grid-b">
+      <div class="ui-block-a" align="center">
+        <span id="tomorrow_cond"></span><br />
+        High: <span id="tomorrow_high"></span><br />
+        Low: <span id="tomorrow_low"></span>
+      </div>
+      <div class="ui-block-b" align="center">
+        <span id="next_cond"></span><br />
+        High: <span id="next_high"></span><br />
+        Low: <span id="next_low"></span>
+      </div>
+      <div class="ui-block-c" align="center">
+        <span id="after_cond"></span><br />
+        High: <span id="after_high"></span><br />
+        Low: <span id="after_low"></span>
+      </div>
+    </div>
+  </div>
+	<div data-role="footer" data-position="fixed">
+		<h5 style="font-size: 8pt;">By: AppsMade4U.com</h5>
+	</div><!-- /footer -->
+</div> <!-- /page -->
+<div data-role="page" id="contactUs" data-inset="true" data-theme="b">
+	<div data-role="header" data-position="fixed">
+    <a href="#home" data-role="button" data-icon="home" data-back="true">Home</a>
+		<h1>Contact Us</h1>
+	</div><!-- /header -->
+	<div data-role="content">	
+    <br /><br />
+    <p><strong>Contact Mobile Ag Connect</strong></p>
+    <br /><br />
+    <div class="ui-grid-a">
+      <div class="ui-block-a">Jim Fries</div>
+      <div class="ui-block-b">Phone&nbsp;&nbsp;<a href="tel://4024320772">402.432.0772</a><br />
+                              Email&nbsp;&nbsp;&nbsp;<a href="mailto://jfries@mobileagconnect.com">jfries@mobileagconnect.com</a></div>
+      <div class="ui-block-a">&nbsp;</div>
+      <div class="ui-block-b">&nbsp;</div>
+      <div class="ui-block-a">Bruce Gordon</div>
+      <div class="ui-block-b">Phone&nbsp;&nbsp;<a href="tel://4028533019">402.335.0090</a><br />
+                              Email&nbsp;&nbsp;&nbsp;<a href="mailto://bruce@mobileagconnect.com">bruce@mobileagconnect.com</a></div>
+    </div>
+  </div>
+  <div data-role="footer" data-position="fixed">
+		<h5 style="font-size: 8pt;">By: AppsMade4U.com</h5>
+	</div><!-- /footer -->
+</div> <!-- /page -->
+
+<script type="text/javascript">
+
+    $(document).ready(function() {
+    });
+    
+</script>
+</body>
+</html>
